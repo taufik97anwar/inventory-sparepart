@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance Spare Part Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6">
+        <h1 class="text-2xl font-bold text-slate-800 mb-6 border-b pb-2">📦 Inventory Spare Part</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 bg-slate-50 p-4 rounded-lg">
+            <input type="text" id="partName" placeholder="Nama Part (ex: Bearing)" class="p-2 border rounded border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <input type="number" id="partStock" placeholder="Jumlah Stok" class="p-2 border rounded border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button onclick="savePart()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition">Tambah Part</button>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-200 text-slate-700">
+                        <th class="p-3 border">Nama Part</th>
+                        <th class="p-3 border">Stok</th>
+                        <th class="p-3 border text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, onSnapshot, query, orderBy } 
+        from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // KONFIGURASI FIREBASE (Ganti dengan milikmu!)
+        const firebaseConfig = {
+  apiKey: "AIzaSyCYefF7T71Xr_8JMQD3CuaOD9sGruNh4zU",
+  authDomain: "trial1-b17a7.firebaseapp.com",
+  projectId: "trial1-b17a7",
+  storageBucket: "trial1-b17a7.firebasestorage.app",
+  messagingSenderId: "468115039313",
+  appId: "1:468115039313:web:6fead094a34276dedd8470",
+  measurementId: "G-Q2GEF64FN2"
+};
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const partsCol = collection(db, "spareparts");
+
+        // 1. CREATE: Fungsi simpan data
+        window.savePart = async () => {
+            const name = document.getElementById('partName').value;
+            const stock = document.getElementById('partStock').value;
+
+            if(name && stock) {
+                try {
+                    await addDoc(partsCol, {
+                        name: name,
+                        stock: parseInt(stock),
+                        lastUpdate: new Date()
+                    });
+                    document.getElementById('partName').value = '';
+                    document.getElementById('partStock').value = '';
+                } catch (e) { console.error("Error: ", e); }
+            } else { alert("Isi semua data!"); }
+        };
+
+        // 2. READ: Fungsi ambil data Real-time
+        const q = query(partsCol, orderBy("lastUpdate", "desc"));
+        onSnapshot(q, (snapshot) => {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = "";
+            
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                tableBody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-3 border font-medium text-slate-700">${data.name}</td>
+                        <td class="p-3 border text-blue-600 font-bold">${data.stock}</td>
+                        <td class="p-3 border text-center">
+                            <button onclick="deletePart('${doc.id}')" class="bg-red-100 text-red-600 px-3 py-1 rounded-full hover:bg-red-200 text-sm font-semibold">Hapus</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        });
+
+        // 3. DELETE: Fungsi hapus data
+        window.deletePart = async (id) => {
+            if(confirm("Yakin ingin menghapus?")) {
+                await deleteDoc(doc(db, "spareparts", id));
+            }
+        };
+    </script>
+</body>
+</html>
