@@ -50,7 +50,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const partsCol = collection(db, "spareparts");
+        const partsCol = collection(db, "sparepart");
 
         // 1. CREATE: Fungsi simpan data
         window.savePart = async () => {
@@ -93,7 +93,7 @@
         // 3. DELETE: Fungsi hapus data
         window.deletePart = async (id) => {
             if(confirm("Yakin ingin menghapus?")) {
-                await deleteDoc(doc(db, "spareparts", id));
+                await deleteDoc(doc(db, "sparepart", id));
             }
         };
     </script>
